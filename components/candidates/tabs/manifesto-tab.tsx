@@ -1,7 +1,10 @@
+'use client';
+
 import {
   TrendingUp, Shield, GraduationCap, Heart, Building2, Scale,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FlagButton } from '@/components/moderation/flag-button';
 import { MANIFESTO_CATEGORY_CONFIG } from '@/lib/party-config';
 import type { Manifesto, ManifestoCategory } from '@/types';
 
@@ -40,9 +43,7 @@ export function ManifestoTab({ manifestos }: Props) {
 
   // Include any unknown categories at the end
   const knownCategories = new Set(Object.keys(MANIFESTO_CATEGORY_CONFIG));
-  const otherSections = manifestos.filter(
-    (m) => !knownCategories.has(m.category),
-  );
+  const otherSections = manifestos.filter((m) => !knownCategories.has(m.category));
 
   return (
     <div className="space-y-6">
@@ -50,7 +51,7 @@ export function ManifestoTab({ manifestos }: Props) {
         .filter(([, sections]) => sections.length > 0)
         .map(([category, sections]) => {
           const config = MANIFESTO_CATEGORY_CONFIG[category];
-          const Icon = CATEGORY_ICONS[category] ?? Scale;
+          const Icon   = CATEGORY_ICONS[category] ?? Scale;
 
           return (
             <Card key={category}>
@@ -62,11 +63,17 @@ export function ManifestoTab({ manifestos }: Props) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {sections.map((section) => (
-                  <div key={section.id} className="space-y-1.5">
+                  // 'group' enables the hover-reveal on FlagButton
+                  <div key={section.id} className="group relative space-y-1.5 pr-8">
                     <h4 className="font-semibold text-sm">{section.section_title}</h4>
                     <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
                       {section.content}
                     </p>
+                    <FlagButton
+                      contentType="manifesto"
+                      contentId={section.id}
+                      className="absolute right-0 top-0"
+                    />
                   </div>
                 ))}
               </CardContent>
@@ -82,11 +89,16 @@ export function ManifestoTab({ manifestos }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             {otherSections.map((section) => (
-              <div key={section.id} className="space-y-1.5">
+              <div key={section.id} className="group relative space-y-1.5 pr-8">
                 <h4 className="font-semibold text-sm">{section.section_title}</h4>
                 <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
                   {section.content}
                 </p>
+                <FlagButton
+                  contentType="manifesto"
+                  contentId={section.id}
+                  className="absolute right-0 top-0"
+                />
               </div>
             ))}
           </CardContent>

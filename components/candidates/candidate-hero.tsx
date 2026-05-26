@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ShareButton } from './share-button';
 import { ReportModal } from './report-modal';
+import { VerificationBadge } from '@/components/admin/verification-badge';
 import {
   getPartyColour,
   ELECTION_TYPE_BADGE,
@@ -160,6 +161,16 @@ export function CandidateHero({ candidate }: Props) {
             />
           </div>
         </div>
+
+        {/* Verification badge */}
+        {candidate.last_verified_at && (
+          <div className="mt-4">
+            <VerificationBadge
+              verifiedAt={candidate.last_verified_at}
+              verifiedBy={candidate.last_verified_by}
+            />
+          </div>
+        )}
 
         {/* Quick stats bar */}
         <div className="mt-5 grid grid-cols-3 divide-x rounded-lg border bg-muted/40">

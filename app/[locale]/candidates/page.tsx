@@ -1,33 +1,95 @@
-import { useTranslations } from 'next-intl';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { setRequestLocale } from 'next-intl/server';
+import { Suspense } from 'react';
+import { Users } from 'lucide-react';
+import { locales, type Locale } from '@/i18n/config';
+import { getFilteredCandidates } from '@/lib/supabase/queries';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CandidateFilters } from './candidate-filters';
+import { CandidateCard }    from './candidate-card';
+import type { CandidateFilters as Filters } from '@/types';
 
-type Props = { params: { locale: string } };
+export const metadata: Metadata = {
+  title: 'Candidates | KYC Nigeria',
+  description: 'Browse and filter Nigerian election candidates — education, track record, manifesto, and fact-check verdicts.',
+};
 
-export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: 'candidates' });
-  return { title: t('title') };
+// URL searchParams drive filtering → always dynamic
+export const dynamic = 'force-dynamic';
+
+type Props = {
+  params:       { locale: string };
+  searchParams: Record<string, string | string[] | undefined>;
+};
+
+/** Pull a single string value from searchParams safely. */
+function sp(val: string | string[] | undefined): string | undefined {
+  return Array.isArray(val) ? val[0] : val;
 }
 
-export default function CandidatesPage({ params: { locale } }: Props) {
+export default async function CandidatesPage({ params, searchParams }: Props) {
+  const locale = locales.includes(params.locale as Locale)
+    ? (params.locale as Locale)
+    : 'en';
   setRequestLocale(locale);
-  const t = useTranslations('candidates');
+
+  // Build filter object from URL params
+  const filters: Filters = {
+    q:             sp(searchParams.q),
+    election_type: sp(searchParams.election_type),
+    state:         sp(searchParams.state),
+    party:         sp(searchParams.party),
+    has_assets:    sp(searchParams.has_assets) as Filters['has_assets'],
+    min_score:     sp(searchParams.min_score),
+  };
+
+  const candidates = await getFilteredCandidates(filters);
 
   return (
-    <section className="container mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-      <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
-
-      <div className="mt-6">
-        <input
-          type="search"
-          placeholder={t('searchPlaceholder')}
-          className="w-full rounded-md border bg-background px-4 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring md:max-w-sm"
-        />
+    <div className="container mx-auto max-w-7xl px-4 py-6 sm:py-10">
+      {/* ── Header ── */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Candidates</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Browse all registered candidates. Use the filters to narrow your search.
+        </p>
       </div>
 
-      {/* Candidate grid — populated once data layer is wired up */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" />
-    </section>
+      {/* ── Name / keyword search ── */}
+      <CandidateSearchInput defaultValue={filters.q ?? ''} />
+
+      <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* ── Sidebar filters ── */}
+        <aside className="w-full lg:w-64 xl:w-72 shrink-0">
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+            <CandidateFilters totalCount={candidates.length} />
+          </Suspense>
+        </aside>
+
+        {/* ── Candidate grid ── */}
+        <section className="flex-1 min-w-0">
+          {candidates.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/20 py-16 text-center">
+              <Users className="h-12 w-12 text-muted-foreground/30" strokeWidth={1.25} />
+              <p className="mt-4 font-semibold">No candidates match your filters</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try adjusting or clearing the filters.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {candidates.map((c) => (
+                <CandidateCard key={c.id} candidate={c} locale={locale} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
   );
 }
+
+// ── Inline search input ───────────────────────────────────────────────────────
+// Client component — must be separate to use useRouter without "use client" on page.
+
+import { CandidateSearchInput } from './candidate-search-input';

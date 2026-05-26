@@ -72,6 +72,8 @@ export type TrackRecordType =
 /** String values, not JS booleans — 'true' | 'false' are valid enum literals */
 export type FactCheckVerdict = 'true' | 'false' | 'misleading' | 'unverified';
 
+export type SourceCredibility = 'official' | 'news_outlet' | 'civil_society' | 'unverified';
+
 // ── Full Supabase Database type ───────────────────────────────────────────────
 
 export type Database = {
@@ -97,6 +99,8 @@ export type Database = {
           created_at: string;               // ISO timestamp string
           updated_at: string;
           search_vector: string | null;     // tsvector, maintained by trigger
+          last_verified_at: string | null;
+          last_verified_by: string | null;
         };
         Insert: {
           id?: string;
@@ -115,7 +119,8 @@ export type Database = {
           is_verified?: boolean;
           created_at?: string;
           updated_at?: string;
-          // search_vector is trigger-managed — omit from Insert
+          last_verified_at?: string | null;
+          last_verified_by?: string | null;
         };
         Update: {
           id?: string;
@@ -134,7 +139,8 @@ export type Database = {
           is_verified?: boolean;
           created_at?: string;
           updated_at?: string;
-          // search_vector is trigger-managed — omit from Update
+          last_verified_at?: string | null;
+          last_verified_by?: string | null;
         };
       };
 
@@ -147,6 +153,9 @@ export type Database = {
           content: string;
           category: ManifestoCategory;
           created_at: string;
+          /** tsvector maintained by trigger (section_title + content). */
+          search_vector: string | null;
+          source_credibility: SourceCredibility;
         };
         Insert: {
           id?: string;
@@ -155,6 +164,7 @@ export type Database = {
           content: string;
           category: ManifestoCategory;
           created_at?: string;
+          source_credibility?: SourceCredibility;
         };
         Update: {
           id?: string;
@@ -163,6 +173,7 @@ export type Database = {
           content?: string;
           category?: ManifestoCategory;
           created_at?: string;
+          source_credibility?: SourceCredibility;
         };
       };
 
@@ -177,6 +188,7 @@ export type Database = {
           source_url: string | null;
           record_type: TrackRecordType;
           created_at: string;
+          source_credibility: SourceCredibility;
         };
         Insert: {
           id?: string;
@@ -187,6 +199,7 @@ export type Database = {
           source_url?: string | null;
           record_type: TrackRecordType;
           created_at?: string;
+          source_credibility?: SourceCredibility;
         };
         Update: {
           id?: string;
@@ -197,6 +210,7 @@ export type Database = {
           source_url?: string | null;
           record_type?: TrackRecordType;
           created_at?: string;
+          source_credibility?: SourceCredibility;
         };
       };
 
@@ -258,6 +272,16 @@ export type Database = {
           tags: string[];
           source: string | null;
           created_at: string;
+          /** tsvector maintained by trigger (title + transcript_en). */
+          search_vector: string | null;
+          /** Supabase Storage path for the uploaded audio/video file. */
+          audio_storage_path: string | null;
+          /** Pipeline status: none | processing | done | error */
+          transcription_status: 'none' | 'processing' | 'done' | 'error';
+          /** Last pipeline error message, if any. */
+          transcription_error: string | null;
+          /** True when content was AI-transcribed (Whisper) and/or AI-translated (Claude). */
+          ai_translated: boolean;
         };
         Insert: {
           id?: string;
@@ -272,6 +296,10 @@ export type Database = {
           tags?: string[];
           source?: string | null;
           created_at?: string;
+          audio_storage_path?: string | null;
+          transcription_status?: 'none' | 'processing' | 'done' | 'error';
+          transcription_error?: string | null;
+          ai_translated?: boolean;
         };
         Update: {
           id?: string;
@@ -286,6 +314,10 @@ export type Database = {
           tags?: string[];
           source?: string | null;
           created_at?: string;
+          audio_storage_path?: string | null;
+          transcription_status?: 'none' | 'processing' | 'done' | 'error';
+          transcription_error?: string | null;
+          ai_translated?: boolean;
         };
       };
 
@@ -301,6 +333,7 @@ export type Database = {
           checked_by: string | null;
           checked_at: string;
           created_at: string;
+          source_credibility: SourceCredibility;
         };
         Insert: {
           id?: string;
@@ -312,6 +345,7 @@ export type Database = {
           checked_by?: string | null;
           checked_at?: string;
           created_at?: string;
+          source_credibility?: SourceCredibility;
         };
         Update: {
           id?: string;
@@ -323,6 +357,140 @@ export type Database = {
           checked_by?: string | null;
           checked_at?: string;
           created_at?: string;
+          source_credibility?: SourceCredibility;
+        };
+      };
+
+      // ────────────────────────────────────────────────────────
+      admin_profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          username: string;
+          display_name: string | null;
+          role: 'super_admin' | 'editor' | 'moderator';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          username: string;
+          display_name?: string | null;
+          role?: 'super_admin' | 'editor' | 'moderator';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          username?: string;
+          display_name?: string | null;
+          role?: 'super_admin' | 'editor' | 'moderator';
+          created_at?: string;
+        };
+      };
+
+      // ────────────────────────────────────────────────────────
+      audit_log: {
+        Row: {
+          id: string;
+          table_name: string;
+          record_id: string;
+          action: 'insert' | 'update' | 'delete';
+          old_data: Record<string, unknown> | null;
+          new_data: Record<string, unknown> | null;
+          changed_fields: string[] | null;
+          changed_by_id: string | null;
+          changed_by_username: string | null;
+          changed_at: string;
+          ip_address: string | null;
+        };
+        Insert: {
+          id?: string;
+          table_name: string;
+          record_id: string;
+          action: 'insert' | 'update' | 'delete';
+          old_data?: Record<string, unknown> | null;
+          new_data?: Record<string, unknown> | null;
+          changed_fields?: string[] | null;
+          changed_by_id?: string | null;
+          changed_by_username?: string | null;
+          changed_at?: string;
+          ip_address?: string | null;
+        };
+        Update: never; // audit log is immutable
+      };
+
+      // ────────────────────────────────────────────────────────
+      transcript_corrections: {
+        Row: {
+          id: string;
+          speech_id: string;
+          locale: 'en' | 'ha' | 'yo' | 'ig';
+          correction: string;
+          email: string | null;
+          status: 'pending' | 'applied' | 'rejected';
+          submitted_at: string;
+        };
+        Insert: {
+          id?: string;
+          speech_id: string;
+          locale: 'en' | 'ha' | 'yo' | 'ig';
+          correction: string;
+          email?: string | null;
+          status?: 'pending' | 'applied' | 'rejected';
+          submitted_at?: string;
+        };
+        Update: {
+          id?: string;
+          speech_id?: string;
+          locale?: 'en' | 'ha' | 'yo' | 'ig';
+          correction?: string;
+          email?: string | null;
+          status?: 'pending' | 'applied' | 'rejected';
+          submitted_at?: string;
+        };
+      };
+
+      // ────────────────────────────────────────────────────────
+      moderation_queue: {
+        Row: {
+          id: string;
+          content_type: 'manifesto' | 'track_record' | 'speech' | 'candidate';
+          content_id: string;
+          reason: 'wrong_info' | 'missing_context' | 'outdated' | 'other';
+          user_note: string | null;
+          ip_hash: string | null;
+          status: 'pending' | 'reviewed' | 'dismissed';
+          reviewed_by: string | null;
+          reviewer_note: string | null;
+          created_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          content_type: 'manifesto' | 'track_record' | 'speech' | 'candidate';
+          content_id: string;
+          reason: 'wrong_info' | 'missing_context' | 'outdated' | 'other';
+          user_note?: string | null;
+          ip_hash?: string | null;
+          status?: 'pending' | 'reviewed' | 'dismissed';
+          reviewed_by?: string | null;
+          reviewer_note?: string | null;
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          content_type?: 'manifesto' | 'track_record' | 'speech' | 'candidate';
+          content_id?: string;
+          reason?: 'wrong_info' | 'missing_context' | 'outdated' | 'other';
+          user_note?: string | null;
+          ip_hash?: string | null;
+          status?: 'pending' | 'reviewed' | 'dismissed';
+          reviewed_by?: string | null;
+          reviewer_note?: string | null;
+          created_at?: string;
+          reviewed_at?: string | null;
         };
       };
     };

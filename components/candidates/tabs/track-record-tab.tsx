@@ -1,5 +1,8 @@
+'use client';
+
 import { ExternalLink } from 'lucide-react';
 import { RECORD_TYPE_CONFIG } from '@/lib/party-config';
+import { FlagButton } from '@/components/moderation/flag-button';
 import type { TrackRecord } from '@/types';
 
 interface Props {
@@ -9,8 +12,8 @@ interface Props {
 const RECORD_TYPE_LABEL: Record<string, string> = {
   achievement: 'Achievement',
   controversy: 'Controversy',
-  conviction: 'Conviction',
-  policy: 'Policy',
+  conviction:  'Conviction',
+  policy:      'Policy',
   appointment: 'Appointment',
 };
 
@@ -29,17 +32,14 @@ export function TrackRecordTab({ trackRecords }: Props) {
     return acc;
   }, {});
 
-  const years = Object.keys(byYear)
-    .map(Number)
-    .sort((a, b) => b - a);
+  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
 
   return (
     <div className="space-y-2">
       {/* Transparency notice */}
       <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
-        Both achievements and controversies are shown to give you a complete
-        picture. Controversies and convictions are{' '}
-        <strong>never hidden</strong>.
+        Both achievements and controversies are shown to give you a complete picture.
+        Controversies and convictions are <strong>never hidden</strong>.
       </p>
 
       <div className="relative ml-4 space-y-8 pt-4">
@@ -62,27 +62,31 @@ export function TrackRecordTab({ trackRecords }: Props) {
             <div className="ml-8 space-y-3">
               {byYear[year].map((record) => {
                 const config =
-                  RECORD_TYPE_CONFIG[record.record_type] ??
-                  RECORD_TYPE_CONFIG.policy;
+                  RECORD_TYPE_CONFIG[record.record_type] ?? RECORD_TYPE_CONFIG.policy;
 
                 return (
+                  // 'group' enables hover-reveal on the flag button
                   <div
                     key={record.id}
-                    className={`rounded-lg border bg-card p-4 border-l-4 ${config.border}`}
+                    className={`group relative rounded-lg border bg-card p-4 border-l-4 pr-10 ${config.border}`}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    {/* Flag button — top-right, hover-only */}
+                    <FlagButton
+                      contentType="track_record"
+                      contentId={record.id}
+                      className="absolute right-2 top-2"
+                    />
+
+                    <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1.5">
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${config.badge}`}
                           >
-                            {RECORD_TYPE_LABEL[record.record_type] ??
-                              record.record_type}
+                            {RECORD_TYPE_LABEL[record.record_type] ?? record.record_type}
                           </span>
                         </div>
-                        <h4 className="font-semibold text-sm leading-snug">
-                          {record.title}
-                        </h4>
+                        <h4 className="font-semibold text-sm leading-snug">{record.title}</h4>
                         <p className="mt-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                           {record.description}
                         </p>

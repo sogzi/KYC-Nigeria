@@ -12,6 +12,7 @@ export type {
   ManifestoCategory,
   TrackRecordType,
   FactCheckVerdict,
+  SourceCredibility,
   // JSONB shapes
   EducationEntry,
   PropertyEntry,
@@ -40,24 +41,30 @@ export type Candidate       = Row<'candidates'>;
 export type Manifesto       = Row<'manifestos'>;
 export type TrackRecord     = Row<'track_records'>;
 export type AssetDeclaration = Row<'asset_declarations'>;
-export type Speech          = Row<'speeches'>;
-export type FactCheck       = Row<'fact_checks'>;
+export type Speech                = Row<'speeches'>;
+export type FactCheck             = Row<'fact_checks'>;
+export type TranscriptCorrection  = Row<'transcript_corrections'>;
+export type ModerationQueueRow    = Row<'moderation_queue'>;
+export type AdminProfile          = Row<'admin_profiles'>;
+export type AuditLogRow           = Row<'audit_log'>;
 
 // ── Named Insert types (used when creating records) ──────────────────────────
 export type CandidateInsert       = Insert<'candidates'>;
 export type ManifestoInsert       = Insert<'manifestos'>;
 export type TrackRecordInsert     = Insert<'track_records'>;
 export type AssetDeclarationInsert = Insert<'asset_declarations'>;
-export type SpeechInsert          = Insert<'speeches'>;
-export type FactCheckInsert       = Insert<'fact_checks'>;
+export type SpeechInsert                  = Insert<'speeches'>;
+export type FactCheckInsert               = Insert<'fact_checks'>;
+export type TranscriptCorrectionInsert    = Insert<'transcript_corrections'>;
 
 // ── Named Update types ───────────────────────────────────────────────────────
 export type CandidateUpdate       = Update<'candidates'>;
 export type ManifestoUpdate       = Update<'manifestos'>;
 export type TrackRecordUpdate     = Update<'track_records'>;
 export type AssetDeclarationUpdate = Update<'asset_declarations'>;
-export type SpeechUpdate          = Update<'speeches'>;
-export type FactCheckUpdate       = Update<'fact_checks'>;
+export type SpeechUpdate                  = Update<'speeches'>;
+export type FactCheckUpdate               = Update<'fact_checks'>;
+export type TranscriptCorrectionUpdate    = Update<'transcript_corrections'>;
 
 // ── Enriched types (joins) ────────────────────────────────────────────────────
 
@@ -83,6 +90,30 @@ export type CandidateCard = Pick<
   | 'current_position'
   | 'is_verified'
 >;
+
+/**
+ * Candidate card enriched with asset/fact-check summary for the listing page.
+ * Returned by `getFilteredCandidates`.
+ */
+export type CandidateListItem = CandidateCard & {
+  /** True if the candidate has at least one asset declaration on record. */
+  has_assets: boolean;
+  /**
+   * Percentage of fact-check claims rated "true" (0-100), or null if no
+   * fact-checks exist yet.
+   */
+  fact_check_score: number | null;
+};
+
+/** Filters accepted by the candidate listing page (all optional). */
+export type CandidateFilters = {
+  q?: string;
+  election_type?: string;
+  state?: string;
+  party?: string;
+  has_assets?: 'yes' | 'no';
+  min_score?: string; // "50" | "75" | "100"
+};
 
 /** Candidate pair for the Compare page */
 export type ComparisonPair = {

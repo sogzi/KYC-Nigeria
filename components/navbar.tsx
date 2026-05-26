@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Globe, Flag } from 'lucide-react';
-import { ThemeToggle } from './theme-toggle';
+import { ThemeToggle }    from './theme-toggle';
+import { GlobalSearch }   from './search/global-search';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 import { cn } from '@/lib/utils';
 
@@ -69,6 +70,9 @@ export function Navbar() {
 
         {/* ── Right controls ── */}
         <div className="flex items-center gap-1">
+
+          {/* Global search */}
+          <GlobalSearch />
 
           {/* Language picker */}
           <div className="relative">
