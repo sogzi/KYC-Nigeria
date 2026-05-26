@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "home": "Gida",
+    "candidates": "Yan Takara",
+    "compare": "Kwatanta",
+    "about": "Game Da",
+    "toggleTheme": "Canza salo",
+    "openMenu": "Buɗe menu",
+    "closeMenu": "Rufe menu"
+  },
+  "home": {
+    "title": "San Ɗan Takarar Ka",
+    "subtitle": "Yi zaɓi da sani kafin zaɓen gama-gari",
+    "cta": "Duba Yan Takara"
+  },
+  "candidates": {
+    "title": "Yan Takara",
+    "subtitle": "Koyi game da waɗanda ke tsayawa takara",
+    "searchPlaceholder": "Nemo yan takara..."
+  },
+  "compare": {
+    "title": "Kwatanta Yan Takara",
+    "subtitle": "Kwatanta matsayin yan takara kusa da kusa",
+    "selectPrompt": "Zaɓi yan takara don kwatanta"
+  },
+  "about": {
+    "title": "Game Da San Ɗan Takarar Ka",
+    "subtitle": "Baiwa masu zaɓe na Najeriya bayanai daidai",
+    "mission": "Manufarmu"
+  },
+  "footer": {
+    "rights": "Duk haƙƙin an kiyaye su.",
+    "tagline": "Taimaka wa masu zaɓe su sami ilimi a duk faɗin Najeriya."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "home": "Ụlọ",
+    "candidates": "Ndị Ọchịchị",
+    "compare": "Tụnyere",
+    "about": "Maka Anyị",
+    "toggleTheme": "Gbanwee ụdị",
+    "openMenu": "Meghee menu",
+    "closeMenu": "Mechie menu"
+  },
+  "home": {
+    "title": "Mara Onye Ọchịchị Gị",
+    "subtitle": "Mee nhọpụta ọmụma n'oge ntuli aka a",
+    "cta": "Hụ Ndị Ọchịchị"
+  },
+  "candidates": {
+    "title": "Ndị Ọchịchị",
+    "subtitle": "Mụta maka ndị na-aga-azụ ọchịchị",
+    "searchPlaceholder": "Chọọ ndị ọchịchị..."
+  },
+  "compare": {
+    "title": "Tụnyere Ndị Ọchịchị",
+    "subtitle": "Ntụnyere nkenke-na-nkenke nke ọnọdụ ndị ọchịchị",
+    "selectPrompt": "Họọ ndị ọchịchị iji tụnyere"
+  },
+  "about": {
+    "title": "Maka Mara Onye Ọchịchị Gị",
+    "subtitle": "Inye ndị ntuli aka Nigeria ozi ziri ezi",
+    "mission": "Ebumnobi Anyị"
+  },
+  "footer": {
+    "rights": "Ikike niile echekwara.",
+    "tagline": "Inye ndị ntuli aka ozi n'ofe Nigeria nile."
+  }
+}

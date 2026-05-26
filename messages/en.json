@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "home": "Home",
+    "candidates": "Candidates",
+    "compare": "Compare",
+    "about": "About",
+    "toggleTheme": "Toggle theme",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "home": {
+    "title": "Know Your Candidate",
+    "subtitle": "Make an informed choice this election season",
+    "cta": "Browse Candidates"
+  },
+  "candidates": {
+    "title": "Candidates",
+    "subtitle": "Learn about those running for office",
+    "searchPlaceholder": "Search candidates..."
+  },
+  "compare": {
+    "title": "Compare Candidates",
+    "subtitle": "Side-by-side comparison of candidates' positions",
+    "selectPrompt": "Select candidates to compare"
+  },
+  "about": {
+    "title": "About Know Your Candidate",
+    "subtitle": "Empowering Nigerian voters with accurate information",
+    "mission": "Our Mission"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "tagline": "Empowering informed voters across Nigeria."
+  }
+}

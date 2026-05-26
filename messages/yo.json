@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "home": "Ile",
+    "candidates": "Awọn Oludije",
+    "compare": "Ṣe Afiwe",
+    "about": "Nípa Wa",
+    "toggleTheme": "Yipada akori",
+    "openMenu": "Ṣii akojọ",
+    "closeMenu": "Tii akojọ"
+  },
+  "home": {
+    "title": "Mọ Oludije Rẹ",
+    "subtitle": "Ṣe ipinnu ọlọgbọn ni akoko idibo yii",
+    "cta": "Wo Awọn Oludije"
+  },
+  "candidates": {
+    "title": "Awọn Oludije",
+    "subtitle": "Kọ ẹkọ nipa awọn ti n dije fun ọfiisi",
+    "searchPlaceholder": "Wa awọn oludije..."
+  },
+  "compare": {
+    "title": "Ṣe Afiwe Awọn Oludije",
+    "subtitle": "Afiwe ẹgbẹ-si-ẹgbẹ ti awọn ipo oludije",
+    "selectPrompt": "Yan awọn oludije lati afiwe"
+  },
+  "about": {
+    "title": "Nípa Mọ Oludije Rẹ",
+    "subtitle": "Fifun awọn oludibo Naijiria ni alaye to peye",
+    "mission": "Iṣẹ Apinfunni Wa"
+  },
+  "footer": {
+    "rights": "Gbogbo awọn ẹtọ wa ni ipamọ.",
+    "tagline": "Fifun awọn oludibo alaye kọja gbogbo Naijiria."
+  }
+}
