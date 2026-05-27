@@ -11,7 +11,7 @@ import type {
 export async function getCandidateProfile(
   id: string,
 ): Promise<{ data: CandidateProfile | null; error: string | null }> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch the candidate row first — bail early if not found
   const { data: candidate, error: candidateError } = await supabase
@@ -78,7 +78,7 @@ export async function getCandidateProfile(
 
 /** Lightweight list of all candidates — used to populate the comparison selector. */
 export async function getAllCandidatesLight(): Promise<CandidateCard[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from('candidates')
     .select(
@@ -102,7 +102,7 @@ export async function getAllCandidatesLight(): Promise<CandidateCard[]> {
 export async function getFilteredCandidates(
   filters: CandidateFilters = {},
 ): Promise<CandidateListItem[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   type RawRow = Row<'candidates'> & {
     asset_declarations: { id: string }[];
@@ -209,7 +209,7 @@ export async function globalSearch(rawQuery: string): Promise<GlobalSearchResult
     return { candidates: [], manifestos: [], speeches: [], query: q };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [candRes, manifRes, speechRes] = await Promise.all([
     // ── Candidates ───────────────────────────────────────────────────────────
@@ -291,7 +291,7 @@ export async function getCandidatesForComparison(
 ): Promise<CandidateProfile[]> {
   if (!ids.length) return [];
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [candidatesRes, manifestosRes, trackRes, assetsRes, speechesRes, factsRes] =
     await Promise.all([

@@ -52,7 +52,7 @@ export async function flagContent(
   }
 
   // Get and hash IP for spam prevention
-  const headersList = headers();
+  const headersList = await headers();
   const rawIp =
     headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     headersList.get('x-real-ip') ??
@@ -60,7 +60,7 @@ export async function flagContent(
   const ip_hash = hashIp(rawIp);
 
   // Insert using anon client (RLS allows public INSERT on moderation_queue)
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const payload: Insert<'moderation_queue'> = {
     content_type: content_type as ContentType,

@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  params:       { locale: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params:       Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 /** Pull a single string value from searchParams safely. */
@@ -28,19 +28,21 @@ function sp(val: string | string[] | undefined): string | undefined {
 }
 
 export default async function CandidatesPage({ params, searchParams }: Props) {
-  const locale = locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  const { locale: rawLocale } = await params;
+  const locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
     : 'en';
   setRequestLocale(locale);
 
   // Build filter object from URL params
+  const sp_vals = await searchParams;
   const filters: Filters = {
-    q:             sp(searchParams.q),
-    election_type: sp(searchParams.election_type),
-    state:         sp(searchParams.state),
-    party:         sp(searchParams.party),
-    has_assets:    sp(searchParams.has_assets) as Filters['has_assets'],
-    min_score:     sp(searchParams.min_score),
+    q:             sp(sp_vals.q),
+    election_type: sp(sp_vals.election_type),
+    state:         sp(sp_vals.state),
+    party:         sp(sp_vals.party),
+    has_assets:    sp(sp_vals.has_assets) as Filters['has_assets'],
+    min_score:     sp(sp_vals.min_score),
   };
 
   const candidates = await getFilteredCandidates(filters);

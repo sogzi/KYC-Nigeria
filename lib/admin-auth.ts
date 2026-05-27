@@ -33,8 +33,8 @@ function makeAdminClient() {
 
 // ── Session client (reads cookies for the current user's session) ─────────────
 
-function makeSessionClient() {
-  const cookieStore = cookies();
+async function makeSessionClient() {
+  const cookieStore = await cookies();
   const { createServerClient: mkSession } = require('@supabase/ssr') as typeof import('@supabase/ssr');
   return mkSession<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,7 +58,7 @@ function makeSessionClient() {
  * Returns null if no valid session or user is not in admin_profiles.
  */
 export async function getAdminUser(): Promise<AdminUser | null> {
-  const sessionClient = makeSessionClient();
+  const sessionClient = await makeSessionClient();
   const { data: { user } } = await sessionClient.auth.getUser();
   if (!user) return null;
 

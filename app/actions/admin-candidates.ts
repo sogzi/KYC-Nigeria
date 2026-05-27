@@ -13,8 +13,8 @@ export type AdminActionState = {
   id?: string;
 };
 
-function getIp() {
-  const h = headers();
+async function getIp() {
+  const h = await headers();
   return h.get('x-forwarded-for')?.split(',')[0]?.trim()
     ?? h.get('x-real-ip')
     ?? undefined;
@@ -65,7 +65,7 @@ export async function createCandidate(
     tableName: 'candidates', recordId: created.id, action: 'insert',
     newData: payload as Record<string, unknown>,
     changedById: admin.id, changedByUsername: admin.profile.username,
-    ipAddress: getIp(),
+    ipAddress: await getIp(),
   });
 
   revalidatePath('/admin/candidates');
@@ -121,7 +121,7 @@ export async function updateCandidate(
     newData: update as Record<string, unknown>,
     changedFields,
     changedById: admin.id, changedByUsername: admin.profile.username,
-    ipAddress: getIp(),
+    ipAddress: await getIp(),
   });
 
   revalidatePath('/admin/candidates');
@@ -156,7 +156,7 @@ export async function deleteCandidate(
     tableName: 'candidates', recordId: id, action: 'delete',
     oldData: before as unknown as Record<string, unknown> ?? undefined,
     changedById: admin.id, changedByUsername: admin.profile.username,
-    ipAddress: getIp(),
+    ipAddress: await getIp(),
   });
 
   revalidatePath('/admin/candidates');

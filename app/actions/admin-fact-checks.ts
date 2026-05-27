@@ -16,8 +16,8 @@ export type FactCheckActionState = {
 type FactCheckVerdict = Row<'fact_checks'>['verdict'];
 type SourceCredibility = Row<'fact_checks'>['source_credibility'];
 
-function getIp() {
-  const h = headers();
+async function getIp() {
+  const h = await headers();
   return h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined;
 }
 
@@ -64,7 +64,7 @@ export async function createFactCheck(
     tableName: 'fact_checks', recordId: created.id, action: 'insert',
     newData: payload as Record<string, unknown>,
     changedById: admin.id, changedByUsername: admin.profile.username,
-    ipAddress: getIp(),
+    ipAddress: await getIp(),
   });
 
   revalidatePath('/admin/fact-checks');
@@ -111,7 +111,7 @@ export async function updateFactCheck(
     newData: update as Record<string, unknown>,
     changedFields,
     changedById: admin.id, changedByUsername: admin.profile.username,
-    ipAddress: getIp(),
+    ipAddress: await getIp(),
   });
 
   if (current?.candidate_id) {
@@ -145,7 +145,7 @@ export async function deleteFactCheck(
     tableName: 'fact_checks', recordId: id, action: 'delete',
     oldData: before as unknown as Record<string, unknown> ?? undefined,
     changedById: admin.id, changedByUsername: admin.profile.username,
-    ipAddress: getIp(),
+    ipAddress: await getIp(),
   });
 
   if (before?.candidate_id) {

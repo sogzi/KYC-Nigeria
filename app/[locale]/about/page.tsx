@@ -1,17 +1,18 @@
-import { useTranslations } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'about' });
   return { title: t('title') };
 }
 
-export default function AboutPage({ params: { locale } }: Props) {
+export default async function AboutPage({ params }: Props) {
+  const { locale } = await params;
   setRequestLocale(locale);
-  const t = useTranslations('about');
+  const t = await getTranslations('about');
 
   return (
     <section className="container mx-auto max-w-2xl px-4 py-10">

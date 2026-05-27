@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  params: { locale: string };
-  searchParams: { ids?: string };
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ ids?: string }>;
 };
 
 /** Parse and validate the ?ids= query param (up to 3 UUIDs). */
@@ -33,12 +33,14 @@ function parseIds(raw: string | undefined): string[] {
 }
 
 export default async function ComparePage({ params, searchParams }: Props) {
-  const locale = locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  const { locale: rawLocale } = await params;
+  const locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
     : 'en';
   setRequestLocale(locale);
 
-  const selectedIds = parseIds(searchParams.ids);
+  const { ids } = await searchParams;
+  const selectedIds = parseIds(ids);
 
   // Parallel fetch: all candidate names for the selector + full profiles for comparison
   const [allCandidates, selectedProfiles] = await Promise.all([

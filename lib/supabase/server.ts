@@ -7,8 +7,8 @@ import type { Database } from '@/types/database.types';
  * Always uses the anon key — reads are unrestricted by RLS public policies.
  * For admin mutations, import createAdminClient() instead.
  */
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -9,10 +9,11 @@ import { locales, type Locale } from '@/i18n/config';
 // Revalidate profile pages every hour; fresh data without a full redeploy.
 export const revalidate = 3600;
 
-type Props = { params: { locale: string; id: string } };
+type Props = { params: Promise<{ locale: string; id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { data } = await getCandidateProfile(params.id);
+  const { id } = await params;
+  const { data } = await getCandidateProfile(id);
   if (!data) return { title: 'Candidate not found' };
 
   return {
@@ -29,12 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CandidateProfilePage({ params }: Props) {
-  const locale = locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  const { locale: rawLocale, id } = await params;
+  const locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
     : 'en';
   setRequestLocale(locale);
 
-  const { data, error } = await getCandidateProfile(params.id);
+  const { data, error } = await getCandidateProfile(id);
 
   if (!data || error) notFound();
 

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cloudflare": "opennextjs-cloudflare build",
+    "preview:cloudflare": "opennextjs-cloudflare preview",
     "start": "next start",
     "lint": "next lint",
     "gen-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/database.types.ts",
@@ -28,7 +30,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.477.0",
-    "next": "^14.2.35",
+    "next": "15.5.18",
     "next-intl": "^3.26.3",
     "next-themes": "^0.4.6",
     "openai": "^6.39.0",
@@ -37,15 +39,17 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.11",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.21",
     "eslint": "^8",
-    "eslint-config-next": "14.2.29",
+    "eslint-config-next": "15.5.18",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.86.0"
   }
 }

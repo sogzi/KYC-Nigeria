@@ -14,12 +14,13 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export default async function AdminSpeechUploadPage({ params }: Props) {
-  const locale = locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  const { locale: rawLocale } = await params;
+  const locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
     : 'en';
   setRequestLocale(locale);
 

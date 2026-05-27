@@ -9,17 +9,18 @@ import type { Row } from '@/types';
 type Candidate = Row<'candidates'>;
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditCandidatePage({ params }: Props) {
+  const { id } = await params;
   await requireAdminUser();
   const supabase = createAdminClient();
 
   const { data: raw } = await supabase
     .from('candidates')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (!raw) notFound();

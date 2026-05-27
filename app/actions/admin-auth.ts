@@ -5,8 +5,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import type { Database } from '@/types/database.types';
 
-function makeClient() {
-  const cookieStore = cookies();
+async function makeClient() {
+  const cookieStore = await cookies();
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -40,7 +40,7 @@ export async function adminLogin(
     return { status: 'error', message: 'Email and password are required.' };
   }
 
-  const supabase = makeClient();
+  const supabase = await makeClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
@@ -78,7 +78,7 @@ export async function adminLogin(
 // ── Logout ────────────────────────────────────────────────────────────────────
 
 export async function adminLogout(): Promise<void> {
-  const supabase = makeClient();
+  const supabase = await makeClient();
   await supabase.auth.signOut();
   redirect('/admin/login');
 }

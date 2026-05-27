@@ -6,7 +6,7 @@ import { getFilteredCandidates } from '@/lib/supabase/queries';
 import { getPartyColour } from '@/lib/party-config';
 import type { CandidateListItem } from '@/types';
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -65,7 +65,8 @@ function CountdownBox({ value, label }: { value: number; label: string }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function HomePage({ params: { locale } }: Props) {
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
   setRequestLocale(locale);
 
   const { days, hours, mins, secs } = getCountdown();

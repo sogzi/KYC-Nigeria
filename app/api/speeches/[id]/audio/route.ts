@@ -19,9 +19,9 @@ const SIGNED_URL_EXPIRY_SECONDS = 60; // 1 minute — enough for the player to s
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: 'Speech ID is required.' }, { status: 400 });

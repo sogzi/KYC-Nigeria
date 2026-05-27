@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -47,8 +47,9 @@ function StatusBadge({ status }: { status: ModerationQueueRow['status'] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function ModerationPage({ params }: Props) {
-  const locale = locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  const { locale: rawLocale } = await params;
+  const locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
     : 'en';
   setRequestLocale(locale);
 
