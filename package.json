@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cloudflare": "opennextjs-cloudflare build",
+    "build:cloudflare": "opennextjs-cloudflare build && cp .open-next/worker.js .open-next/assets/_worker.js",
     "preview:cloudflare": "opennextjs-cloudflare preview",
+    "deploy:cloudflare": "wrangler pages deploy .open-next/assets",
     "start": "next start",
     "lint": "next lint",
     "gen-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/database.types.ts",
