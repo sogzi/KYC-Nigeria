@@ -49,6 +49,13 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        /* ── NaijaVote brand tokens ── */
+        brand: {
+          green:        '#006400',
+          gold:         '#C8971A',
+          'gold-light': '#E8B530',
+          bg:           '#FAFEF8',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

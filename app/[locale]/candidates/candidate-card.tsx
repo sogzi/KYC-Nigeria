@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { ShieldCheck, BadgeCheck, Wallet, BarChart3 } from 'lucide-react';
+import { CheckCircle2, Wallet, BarChart3 } from 'lucide-react';
 import { getPartyColour, ELECTION_TYPE_LABEL } from '@/lib/party-config';
-import { cn } from '@/lib/utils';
 import type { CandidateListItem, ElectionType } from '@/types';
 
 interface Props {
@@ -11,97 +10,106 @@ interface Props {
 
 export function CandidateCard({ candidate: c, locale }: Props) {
   const colour = getPartyColour(c.party_affiliation);
+  const initials = c.full_name.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase();
 
   return (
     <Link
       href={`/${locale}/candidates/${c.id}`}
-      className="group flex flex-col rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+      className="group flex items-start overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
     >
-      {/* Party colour stripe */}
-      <div className="h-1.5 w-full" style={{ backgroundColor: colour }} />
+      {/* Party colour bar — left edge */}
+      <div className="w-1.5 shrink-0 self-stretch rounded-l-xl" style={{ backgroundColor: colour }} />
 
-      <div className="flex flex-1 flex-col p-4 gap-3">
-        {/* Avatar + name */}
-        <div className="flex items-start gap-3">
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white dark:ring-gray-800 shadow-sm"
+      {/* Avatar */}
+      <div
+        className="mx-4 mt-5 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[15px] font-black text-white shadow ring-2 ring-white"
+        style={{ backgroundColor: colour }}
+      >
+        {c.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={c.photo_url}
+            alt={c.full_name}
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : (
+          initials
+        )}
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col gap-2 py-4 pr-4 min-w-0">
+
+        {/* Name row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-bold leading-snug truncate">{c.full_name}</p>
+            {c.current_position && (
+              <p className="text-xs text-muted-foreground truncate">{c.current_position}</p>
+            )}
+          </div>
+          <span
+            className="shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white"
             style={{ backgroundColor: colour }}
           >
-            {c.photo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={c.photo_url}
-                alt={c.full_name}
-                className="h-full w-full rounded-full object-cover"
-              />
-            ) : (
-              c.full_name.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="font-bold leading-snug line-clamp-2">{c.full_name}</p>
-              {c.is_verified && (
-                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-label="Verified" />
-              )}
-            </div>
-
-            <div className="mt-1 flex flex-wrap items-center gap-1">
-              <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                style={{ backgroundColor: colour }}
-              >
-                {c.party_affiliation}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {ELECTION_TYPE_LABEL[c.election_type as ElectionType] ?? c.election_type}
-              </span>
-            </div>
-          </div>
+            {c.party_affiliation}
+          </span>
         </div>
 
-        {/* Location */}
-        {(c.state || c.constituency) && (
-          <p className="text-xs text-muted-foreground">
-            {[c.state, c.constituency].filter(Boolean).join(' · ')}
-          </p>
-        )}
-
-        {/* Current position */}
-        {c.current_position && (
-          <p className="text-xs text-foreground/70 line-clamp-1">{c.current_position}</p>
-        )}
-
-        {/* Stats row */}
-        <div className="mt-auto flex items-center gap-3 pt-2 border-t text-xs text-muted-foreground">
-          {/* Asset declaration */}
-          <span
-            className={cn(
-              'flex items-center gap-1',
-              c.has_assets ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground/60',
-            )}
-          >
-            <Wallet className="h-3.5 w-3.5" />
-            {c.has_assets ? 'Assets declared' : 'No declaration'}
+        {/* Chips row */}
+        <div className="flex flex-wrap gap-1.5">
+          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold capitalize text-secondary-foreground">
+            {ELECTION_TYPE_LABEL[c.election_type as ElectionType] ?? c.election_type}
           </span>
-
-          {/* Fact-check score */}
-          {c.fact_check_score !== null && (
-            <span
-              className={cn(
-                'ml-auto flex items-center gap-1 font-medium',
-                c.fact_check_score >= 75
-                  ? 'text-green-600 dark:text-green-400'
-                  : c.fact_check_score >= 50
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-red-600 dark:text-red-400',
-              )}
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-              {c.fact_check_score}% true
+          {c.state && (
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-secondary-foreground">
+              {c.state}
             </span>
           )}
+        </div>
+
+        {/* Footer row */}
+        <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
+          <span
+            className={
+              c.is_verified
+                ? 'flex items-center gap-1 font-semibold text-brand-green'
+                : 'flex items-center gap-1 text-muted-foreground'
+            }
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            {c.is_verified ? 'Verified Profile' : 'Unverified'}
+          </span>
+
+          <div className="flex items-center gap-3">
+            {/* Assets */}
+            <span
+              className={
+                c.has_assets
+                  ? 'flex items-center gap-1 text-muted-foreground'
+                  : 'flex items-center gap-1 text-amber-600 font-medium'
+              }
+            >
+              <Wallet className="h-3 w-3" />
+              {c.has_assets ? 'Assets Declared' : 'No Declaration'}
+            </span>
+
+            {/* Fact-check score */}
+            {c.fact_check_score !== null && (
+              <span
+                className={
+                  c.fact_check_score >= 75
+                    ? 'flex items-center gap-1 font-semibold text-brand-green'
+                    : c.fact_check_score >= 50
+                    ? 'flex items-center gap-1 text-amber-600 font-medium'
+                    : 'flex items-center gap-1 text-red-600 font-medium'
+                }
+              >
+                <BarChart3 className="h-3 w-3" />
+                {c.fact_check_score}% true
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </Link>

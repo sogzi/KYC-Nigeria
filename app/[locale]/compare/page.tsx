@@ -56,26 +56,27 @@ export default async function ComparePage({ params, searchParams }: Props) {
   });
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-10 space-y-6">
+    <div className="bg-brand-bg min-h-screen">
       {/* ── Page header ── */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Compare Candidates
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Select up to 3 candidates for a side-by-side comparison.
-          </p>
+      <div className="border-b bg-white px-4 py-8">
+        <div className="container mx-auto max-w-6xl flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
+              Compare <span className="text-brand-green">Candidates</span>
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              See where candidates stand on the issues that matter most — side by side, issue by issue.
+            </p>
+          </div>
+          {selectedIds.length >= 2 && (
+            <ShareComparisonButton candidateIds={selectedIds} />
+          )}
         </div>
-
-        {/* Share button — only shown once ≥ 2 candidates selected */}
-        {selectedIds.length >= 2 && (
-          <ShareComparisonButton candidateIds={selectedIds} />
-        )}
       </div>
 
+      <div className="container mx-auto max-w-6xl px-4 py-6 space-y-6">
       {/* ── Candidate selector ── */}
-      <section className="rounded-xl border bg-card p-4 sm:p-5 shadow-sm">
+      <section className="rounded-xl border bg-white p-4 sm:p-5 shadow-sm">
         <CandidateSelector
           allCandidates={allCandidates}
           selectedIds={selectedIds}
@@ -90,21 +91,20 @@ export default async function ComparePage({ params, searchParams }: Props) {
       )}
 
       {/* ── Disclaimer ── */}
-      <footer className="flex items-start gap-2 rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <footer className="flex items-start gap-2 rounded-lg border bg-white px-4 py-3 text-xs text-muted-foreground shadow-sm">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-green" />
         <p>
-          <strong>Data sourced from public records</strong> including INEC filings,
-          official government websites, and verified news sources. Last updated:{' '}
-          <strong>{lastUpdated}</strong>. KYC Nigeria does not guarantee completeness
-          of data — candidates are responsible for submitting their own information.{' '}
-          <a
-            href="/en/about"
-            className="underline underline-offset-2 hover:text-foreground"
-          >
+          <strong>Disclaimer:</strong> Policy strength scores are based on specificity, feasibility and
+          verifiability of stated positions — not political alignment. Grades are editorial assessments by
+          NaijaVote researchers and do not constitute an endorsement of any candidate. All data sourced
+          from public records, INEC filings and verified media. Last updated:{' '}
+          <strong>{lastUpdated}</strong>.{' '}
+          <a href="/en/about" className="underline underline-offset-2 hover:text-brand-green">
             Learn more about our methodology.
           </a>
         </p>
       </footer>
+      </div>
     </div>
   );
 }

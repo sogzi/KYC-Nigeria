@@ -3,15 +3,24 @@
     "home": "Home",
     "candidates": "Candidates",
     "compare": "Compare",
+    "factChecks": "Fact Checks",
+    "speeches": "Speeches",
     "about": "About",
     "toggleTheme": "Toggle theme",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "searchCandidates": "Search Candidates"
   },
   "home": {
     "title": "Know Your Candidate",
-    "subtitle": "Make an informed choice this election season",
-    "cta": "Browse Candidates"
+    "subtitle": "Research candidates, compare manifestos, check track records and make an informed vote. Your vote is your power.",
+    "cta": "Explore Candidates",
+    "compareCta": "Compare Candidates →",
+    "electionBadge": "NIGERIA GENERAL ELECTIONS 2027",
+    "heroHeading1": "Know Who",
+    "heroHeading2": "You're",
+    "heroHeadingGold": "Voting",
+    "heroHeading3": "For."
   },
   "candidates": {
     "title": "Candidates",
@@ -30,6 +39,6 @@
   },
   "footer": {
     "rights": "All rights reserved.",
-    "tagline": "Empowering informed voters across Nigeria."
+    "tagline": "Empowering Nigerians with knowledge. Non-partisan civic platform."
   }
 }

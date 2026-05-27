@@ -118,11 +118,11 @@ function SectionHeaderRow({
 }) {
   const Icon = SECTION_ICONS[section.icon] ?? BookOpen;
   return (
-    <div className="flex border-t-2 border-border bg-muted/40">
+    <div className="flex border-t-2 border-border bg-[#006400]">
       {/* Label column */}
-      <div className="sticky left-0 z-10 flex w-40 shrink-0 items-center gap-2 bg-muted/40 px-3 py-2.5">
-        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <div className="sticky left-0 z-10 flex w-40 shrink-0 items-center gap-2 bg-[#006400] px-3 py-2.5">
+        <Icon className="h-4 w-4 shrink-0 text-white/70" />
+        <span className="text-xs font-bold uppercase tracking-wider text-white">
           {section.title}
         </span>
       </div>
@@ -130,9 +130,7 @@ function SectionHeaderRow({
       {Array.from({ length: numCandidates }).map((_, i) => (
         <div
           key={i}
-          // Mobile: each candidate col takes exactly the viewport minus label col
-          // Desktop: auto width, shared equally
-          className="min-w-[calc(100vw-10rem)] border-l bg-muted/20 md:min-w-0 md:flex-1"
+          className="min-w-[calc(100vw-10rem)] border-l border-white/10 bg-[#006400]/90 md:min-w-0 md:flex-1"
         />
       ))}
     </div>

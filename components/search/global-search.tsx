@@ -103,8 +103,8 @@ function ResultItem({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function GlobalSearch() {
-  const [open, setOpen] = useState(false);
+export function GlobalSearch({ autoFocus }: { autoFocus?: boolean } = {}) {
+  const [open, setOpen] = useState(!!autoFocus);
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { results, loading } = useSearch(query);

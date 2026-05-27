@@ -46,44 +46,50 @@ export default async function CandidatesPage({ params, searchParams }: Props) {
   const candidates = await getFilteredCandidates(filters);
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-6 sm:py-10">
-      {/* ── Header ── */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Candidates</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Browse all registered candidates. Use the filters to narrow your search.
-        </p>
+    <div className="bg-brand-bg min-h-screen">
+      {/* ── Page header ── */}
+      <div className="border-b bg-white px-4 py-8">
+        <div className="container mx-auto max-w-6xl">
+          <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
+            Browse <span className="text-brand-green">Candidates</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Browse all registered candidates. Use the filters to narrow your search.
+          </p>
+          <div className="mt-4">
+            <CandidateSearchInput defaultValue={filters.q ?? ''} />
+          </div>
+        </div>
       </div>
 
-      {/* ── Name / keyword search ── */}
-      <CandidateSearchInput defaultValue={filters.q ?? ''} />
+      <div className="container mx-auto max-w-6xl px-4 py-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          {/* ── Sidebar filters ── */}
+          <aside className="w-full lg:w-64 xl:w-72 shrink-0">
+            <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+              <CandidateFilters totalCount={candidates.length} />
+            </Suspense>
+          </aside>
 
-      <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
-        {/* ── Sidebar filters ── */}
-        <aside className="w-full lg:w-64 xl:w-72 shrink-0">
-          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
-            <CandidateFilters totalCount={candidates.length} />
-          </Suspense>
-        </aside>
-
-        {/* ── Candidate grid ── */}
-        <section className="flex-1 min-w-0">
-          {candidates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/20 py-16 text-center">
-              <Users className="h-12 w-12 text-muted-foreground/30" strokeWidth={1.25} />
-              <p className="mt-4 font-semibold">No candidates match your filters</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Try adjusting or clearing the filters.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {candidates.map((c) => (
-                <CandidateCard key={c.id} candidate={c} locale={locale} />
-              ))}
-            </div>
-          )}
-        </section>
+          {/* ── Candidate list ── */}
+          <section className="flex-1 min-w-0">
+            {candidates.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-white py-16 text-center">
+                <Users className="h-12 w-12 text-muted-foreground/30" strokeWidth={1.25} />
+                <p className="mt-4 font-semibold">No candidates match your filters</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Try adjusting or clearing the filters.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {candidates.map((c) => (
+                  <CandidateCard key={c.id} candidate={c} locale={locale} />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

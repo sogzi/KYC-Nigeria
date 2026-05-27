@@ -39,9 +39,18 @@ export default async function CandidateProfilePage({ params }: Props) {
   if (!data || error) notFound();
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-6 sm:py-10 space-y-6">
-      <CandidateHero candidate={data} />
-      <CandidateTabs candidate={data} locale={locale} />
+    <div>
+      {/* Hero section — white card on brand-bg */}
+      <div className="bg-brand-bg px-4 py-8">
+        <div className="container mx-auto max-w-5xl rounded-2xl border bg-white p-6 shadow-sm sm:p-8">
+          <CandidateHero candidate={data} />
+        </div>
+      </div>
+
+      {/* Tabs section */}
+      <div className="container mx-auto max-w-5xl px-4 pb-10">
+        <CandidateTabs candidate={data} locale={locale} />
+      </div>
     </div>
   );
 }
