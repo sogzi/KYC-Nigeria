@@ -24,6 +24,7 @@ export function Navbar() {
     { href: `/${locale}/compare`,    key: 'compare' },
     { href: `/${locale}/fact-checks`, key: 'factChecks' },
     { href: `/${locale}/speeches`,   key: 'speeches' },
+    { href: `/${locale}/news`,       key: 'news' },
     { href: `/${locale}/about`,      key: 'about' },
   ] as const;
 

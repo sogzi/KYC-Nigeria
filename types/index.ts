@@ -65,6 +65,9 @@ export type AssetDeclarationUpdate = Update<'asset_declarations'>;
 export type SpeechUpdate                  = Update<'speeches'>;
 export type FactCheckUpdate               = Update<'fact_checks'>;
 export type TranscriptCorrectionUpdate    = Update<'transcript_corrections'>;
+export type NewsArticle        = Row<'news_articles'>;
+export type NewsArticleInsert  = Insert<'news_articles'>;
+export type NewsArticleUpdate  = Update<'news_articles'>;
 
 // ── Enriched types (joins) ────────────────────────────────────────────────────
 

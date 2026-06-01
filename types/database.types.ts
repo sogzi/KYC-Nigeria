@@ -452,6 +452,60 @@ export type Database = {
       };
 
       // ────────────────────────────────────────────────────────
+      news_articles: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          url: string;
+          source_name: string | null;
+          author: string | null;
+          published_at: string | null;
+          image_url: string | null;
+          ai_summary: string | null;
+          candidates_mentioned: string[];
+          policy_tags: string[];
+          sentiment: 'positive' | 'negative' | 'neutral' | 'mixed' | null;
+          ai_enriched_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          title: string;
+          description?: string | null;
+          url: string;
+          source_name?: string | null;
+          author?: string | null;
+          published_at?: string | null;
+          image_url?: string | null;
+          ai_summary?: string | null;
+          candidates_mentioned?: string[];
+          policy_tags?: string[];
+          sentiment?: 'positive' | 'negative' | 'neutral' | 'mixed' | null;
+          ai_enriched_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          url?: string;
+          source_name?: string | null;
+          author?: string | null;
+          published_at?: string | null;
+          image_url?: string | null;
+          ai_summary?: string | null;
+          candidates_mentioned?: string[];
+          policy_tags?: string[];
+          sentiment?: 'positive' | 'negative' | 'neutral' | 'mixed' | null;
+          ai_enriched_at?: string | null;
+          updated_at?: string;
+        };
+      };
+
+      // ────────────────────────────────────────────────────────
       moderation_queue: {
         Row: {
           id: string;
