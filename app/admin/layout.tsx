@@ -12,6 +12,7 @@ import {
   ScrollText,
   LogOut,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ const NAV = [
   { href: '/admin/moderation',   label: 'Moderation',    Icon: Flag            },
   { href: '/admin/speeches',     label: 'Speeches',      Icon: FileAudio       },
   { href: '/admin/audit-log',    label: 'Audit Log',     Icon: ScrollText      },
+  { href: '/admin/ai-tools',     label: 'AI Tools',      Icon: Sparkles        },
 ] as const;
 
 // ── Sidebar nav link ──────────────────────────────────────────────────────────

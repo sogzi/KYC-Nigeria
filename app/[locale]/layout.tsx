@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/config';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Navbar } from '@/components/navbar';
+import { AiChatWidget } from '@/components/ai-chat';
 
 type Props = {
   children: React.ReactNode;
@@ -45,6 +46,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer messages={messages} />
+          <AiChatWidget />
         </div>
       </ThemeProvider>
     </NextIntlClientProvider>
