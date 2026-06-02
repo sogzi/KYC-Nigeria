@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import {
   Users, Mic, Newspaper, Loader2, Sparkles,
   CheckCircle2, XCircle, AlertTriangle, HelpCircle,
-  ChevronDown, ChevronUp, Save, RefreshCw,
+  ChevronDown, ChevronUp, Save, RefreshCw, Database,
 } from 'lucide-react';
 import { saveCandidateFromAI, saveSpeechWithFactChecks } from '@/app/actions/ai-content';
 import { MAJOR_PARTIES, NIGERIAN_STATES } from '@/types';
@@ -56,7 +56,7 @@ const VERDICT_CONFIG = {
   unverified:  { icon: HelpCircle,    label: 'Unverified',  className: 'text-gray-600 bg-gray-50 border-gray-200' },
 } as const;
 
-type Tab = 'candidates' | 'speeches' | 'news';
+type Tab = 'candidates' | 'speeches' | 'news' | 'pipeline';
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -80,6 +80,7 @@ export default function AiToolsPage() {
             { id: 'candidates', label: 'Candidates', Icon: Users },
             { id: 'speeches',   label: 'Speeches',   Icon: Mic },
             { id: 'news',       label: 'News',        Icon: Newspaper },
+            { id: 'pipeline',   label: 'Auto-Sync',   Icon: Database },
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
@@ -102,6 +103,7 @@ export default function AiToolsPage() {
       {activeTab === 'candidates' && <CandidateGeneratorTab />}
       {activeTab === 'speeches'   && <SpeechFactCheckerTab />}
       {activeTab === 'news'       && <NewsRefreshTab />}
+      {activeTab === 'pipeline'   && <AutoSyncTab />}
     </div>
   );
 }
@@ -594,7 +596,7 @@ function SpeechFactCheckerTab() {
   );
 }
 
-// ── Tab 3: News Refresh ───────────────────────────────────────────────────────
+// ── Tab 3: News Refresh ──────────────────────────────────────────────────────
 
 function NewsRefreshTab() {
   const [loading, setLoading]   = useState(false);
@@ -661,6 +663,182 @@ function NewsRefreshTab() {
         <p><code className="bg-muted px-1 py-0.5 rounded">NEWSAPI_KEY</code> — free at newsapi.org (100 req/day)</p>
         <p><code className="bg-muted px-1 py-0.5 rounded">ANTHROPIC_API_KEY</code> — from console.anthropic.com</p>
         <p><code className="bg-muted px-1 py-0.5 rounded">NEWS_REFRESH_SECRET</code> — optional, protects the endpoint</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Tab 4: Automated Candidate Sync ──────────────────────────────────────────
+
+interface PipelineDetail {
+  slug: string;
+  status: 'ok' | 'skipped' | 'error';
+  candidateId: string | null;
+  message?: string;
+}
+
+function AutoSyncTab() {
+  const [loading, setLoading]   = useState(false);
+  const [result, setResult]     = useState<null | {
+    ok_count: number; skipped: number; errors: number; duration_ms: number;
+    details: PipelineDetail[];
+  }>(null);
+  const [error, setError]       = useState('');
+  const [secret, setSecret]     = useState('');
+  const [showDetails, setShowDetails] = useState(false);
+
+  async function runPipeline() {
+    if (!secret.trim()) {
+      setError('Enter your PIPELINE_SECRET to authenticate the request.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const res = await fetch('/api/pipeline', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${secret.trim()}`,
+        },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error ?? 'Pipeline failed');
+      setResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Pipeline failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const statusIcon = (s: PipelineDetail['status']) =>
+    s === 'ok'      ? '✅' :
+    s === 'skipped' ? '⏭️' : '❌';
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Explanation */}
+      <div className="rounded-xl border bg-white p-6 space-y-3">
+        <div className="flex items-center gap-2">
+          <Database className="h-5 w-5 text-brand-green" />
+          <h2 className="font-bold">Automated Candidate Sync</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Fetches real politician data from Wikipedia, structures it with Claude AI,
+          and saves it directly to the database. Covers{' '}
+          <strong>presidential, gubernatorial, and senatorial</strong> candidates
+          for the 2027 elections.
+        </p>
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 space-y-1">
+          <p className="font-bold">⚠️ This replaces all existing candidate profiles</p>
+          <p>Running this will delete fake/test candidates and replace them with Wikipedia-sourced data. All records are flagged <code>is_verified = false</code> until a human reviews them.</p>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+            PIPELINE_SECRET (from Cloudflare env vars)
+          </label>
+          <input
+            type="password"
+            value={secret}
+            onChange={(e) => setSecret(e.target.value)}
+            placeholder="Enter your pipeline secret..."
+            className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-green"
+          />
+        </div>
+
+        <button
+          onClick={runPipeline}
+          disabled={loading || !secret.trim()}
+          className="flex items-center gap-2 rounded-lg bg-brand-green px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 hover:bg-brand-green/90"
+        >
+          {loading ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Syncing candidates — this may take a few minutes...</>
+          ) : (
+            <><RefreshCw className="h-4 w-4" /> Sync All Candidates Now</>
+          )}
+        </button>
+
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        )}
+      </div>
+
+      {/* Results */}
+      {result && (
+        <div className="rounded-xl border bg-white p-6 space-y-4">
+          <h3 className="font-bold">Pipeline Result</h3>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-center">
+              <p className="text-2xl font-black text-emerald-700">{result.ok_count}</p>
+              <p className="text-xs text-emerald-600 font-semibold">Synced</p>
+            </div>
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-center">
+              <p className="text-2xl font-black text-amber-700">{result.skipped}</p>
+              <p className="text-xs text-amber-600 font-semibold">Skipped</p>
+            </div>
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-center">
+              <p className="text-2xl font-black text-red-700">{result.errors}</p>
+              <p className="text-xs text-red-600 font-semibold">Errors</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Completed in {(result.duration_ms / 1000).toFixed(1)}s
+          </p>
+
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-green"
+          >
+            {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {showDetails ? 'Hide' : 'Show'} details
+          </button>
+
+          {showDetails && (
+            <div className="rounded-lg border divide-y text-sm">
+              {result.details.map((d) => (
+                <div key={d.slug} className="flex items-start gap-2 px-3 py-2">
+                  <span>{statusIcon(d.status)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium">{d.slug}</p>
+                    {d.message && (
+                      <p className="text-xs text-muted-foreground truncate">{d.message}</p>
+                    )}
+                    {d.candidateId && (
+                      <p className="text-xs text-muted-foreground font-mono">id: {d.candidateId}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Setup instructions */}
+      <div className="rounded-xl border bg-white p-6 space-y-3">
+        <h3 className="font-semibold">Automated Daily Sync via GitHub Actions</h3>
+        <p className="text-sm text-muted-foreground">
+          The pipeline also runs <strong>automatically every day at 03:00 UTC</strong>
+          via GitHub Actions. Set these secrets in your GitHub repo
+          (<code className="bg-muted px-1 rounded text-xs">Settings → Secrets → Actions</code>):
+        </p>
+        <div className="rounded-lg bg-muted p-3 text-xs space-y-1 font-mono">
+          <p><strong>PIPELINE_URL</strong>=https://kyc-nigeria.&lt;account&gt;.workers.dev/api/pipeline</p>
+          <p><strong>PIPELINE_SECRET</strong>=your-secret-value</p>
+          <p><strong>APP_URL</strong>=https://kyc-nigeria.&lt;account&gt;.workers.dev</p>
+          <p><strong>NEWS_REFRESH_SECRET</strong>=your-news-secret</p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Set <code className="bg-muted px-1 rounded">PIPELINE_SECRET</code> in{' '}
+          <strong>Cloudflare Workers → Settings → Variables</strong> too, so the endpoint can verify requests.
+        </p>
       </div>
     </div>
   );

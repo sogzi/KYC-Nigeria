@@ -1,0 +1,96 @@
+name: Automated Candidate Data Pipeline
+
+# ── Schedule ──────────────────────────────────────────────────────────────────
+# Runs daily at 03:00 UTC (04:00 WAT) — low-traffic hour for Nigeria.
+# Also manually triggerable from the GitHub Actions UI.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'     # daily at 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      slugs:
+        description: 'Comma-separated candidate slugs to refresh (leave blank for all)'
+        required: false
+        default: ''
+
+jobs:
+  sync-candidates:
+    name: Sync Candidate Profiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Trigger candidate pipeline
+        env:
+          PIPELINE_URL:    ${{ secrets.PIPELINE_URL }}
+          PIPELINE_SECRET: ${{ secrets.PIPELINE_SECRET }}
+        run: |
+          # Build optional slug filter from workflow_dispatch input
+          BODY='{}'
+          if [ -n "${{ github.event.inputs.slugs }}" ]; then
+            # Convert "slug1,slug2" → ["slug1","slug2"] JSON array
+            SLUGS_JSON=$(echo '${{ github.event.inputs.slugs }}' \
+              | tr ',' '\n' \
+              | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+              | jq -R . \
+              | jq -s .)
+            BODY=$(echo "{}" | jq --argjson s "$SLUGS_JSON" '.slugs = $s')
+          fi
+
+          echo "Calling pipeline at: $PIPELINE_URL"
+          echo "Body: $BODY"
+
+          HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $PIPELINE_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "$BODY" \
+            "$PIPELINE_URL")
+
+          echo "HTTP status: $HTTP_STATUS"
+          echo "Response:"
+          cat /tmp/response.json | jq . 2>/dev/null || cat /tmp/response.json
+
+          # Fail the job if HTTP status is not 2xx
+          if [[ "$HTTP_STATUS" -lt 200 || "$HTTP_STATUS" -ge 300 ]]; then
+            echo "❌ Pipeline returned non-2xx status: $HTTP_STATUS"
+            exit 1
+          fi
+
+          # Fail if ok=false in response
+          OK=$(cat /tmp/response.json | jq -r '.ok // false' 2>/dev/null)
+          if [ "$OK" != "true" ]; then
+            echo "❌ Pipeline reported failure"
+            exit 1
+          fi
+
+          echo "✅ Pipeline completed successfully"
+
+  sync-news:
+    name: Refresh News Articles
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger news refresh
+        env:
+          APP_URL:              ${{ secrets.APP_URL }}
+          NEWS_REFRESH_SECRET:  ${{ secrets.NEWS_REFRESH_SECRET }}
+        run: |
+          echo "Refreshing news from: $APP_URL/api/news/refresh"
+
+          HTTP_STATUS=$(curl -s -o /tmp/news_response.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $NEWS_REFRESH_SECRET" \
+            "$APP_URL/api/news/refresh")
+
+          echo "HTTP status: $HTTP_STATUS"
+          cat /tmp/news_response.json | jq . 2>/dev/null || cat /tmp/news_response.json
+
+          if [[ "$HTTP_STATUS" -lt 200 || "$HTTP_STATUS" -ge 300 ]]; then
+            echo "❌ News refresh returned non-2xx: $HTTP_STATUS"
+            exit 1
+          fi
+
+          echo "✅ News refresh completed"
