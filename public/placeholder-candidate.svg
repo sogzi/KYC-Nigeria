@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <rect width="120" height="120" rx="60" fill="#E8F5E8"/>
+  <!-- Body -->
+  <circle cx="60" cy="44" r="22" fill="#006400" opacity="0.35"/>
+  <!-- Head -->
+  <circle cx="60" cy="40" r="16" fill="#006400" opacity="0.5"/>
+  <!-- Shoulders -->
+  <ellipse cx="60" cy="90" rx="30" ry="20" fill="#006400" opacity="0.25"/>
+</svg>

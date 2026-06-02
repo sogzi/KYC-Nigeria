@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#006400"/>
+
+  <!-- Subtle grid pattern -->
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Gold accent bar top -->
+  <rect x="0" y="0" width="1200" height="8" fill="#C8971A"/>
+
+  <!-- Logo circle -->
+  <circle cx="120" cy="120" r="52" fill="rgba(255,255,255,0.12)"/>
+  <circle cx="120" cy="120" r="44" fill="white"/>
+  <text x="120" y="135" font-family="Georgia, serif" font-size="42" font-weight="900" fill="#006400" text-anchor="middle">N</text>
+
+  <!-- Brand name -->
+  <text x="188" y="108" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="white">Naija</text>
+  <text x="370" y="108" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="#C8971A">Vote</text>
+
+  <!-- Tagline under brand -->
+  <text x="188" y="145" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.65)" letter-spacing="3">NIGERIA GENERAL ELECTIONS 2027</text>
+
+  <!-- Main headline -->
+  <text x="80" y="290" font-family="Arial, sans-serif" font-size="82" font-weight="900" fill="white">Know Who</text>
+  <text x="80" y="385" font-family="Arial, sans-serif" font-size="82" font-weight="900" fill="white">You're</text>
+  <text x="80" y="480" font-family="Arial, sans-serif" font-size="82" font-weight="900" fill="#C8971A">Voting For.</text>
+
+  <!-- Right side — decorative candidate avatars -->
+  <circle cx="920" cy="240" r="70" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  <circle cx="1050" cy="320" r="55" fill="rgba(200,151,26,0.3)" stroke="#C8971A" stroke-width="2"/>
+  <circle cx="870" cy="380" r="48" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <circle cx="1000" cy="450" r="44" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+
+  <!-- Party pills -->
+  <rect x="860" y="205" width="120" height="32" rx="16" fill="rgba(255,255,255,0.15)"/>
+  <text x="920" y="226" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle">APC</text>
+
+  <rect x="988" y="290" width="120" height="32" rx="16" fill="rgba(200,151,26,0.4)"/>
+  <text x="1048" y="311" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle">PDP</text>
+
+  <rect x="820" y="348" width="120" height="32" rx="16" fill="rgba(255,255,255,0.12)"/>
+  <text x="880" y="369" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle">Labour</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="590" width="1200" height="40" fill="rgba(0,0,0,0.25)"/>
+  <text x="80" y="616" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.6)">naijavote.ng · Non-partisan voter education platform</text>
+</svg>

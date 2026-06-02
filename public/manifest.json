@@ -1,0 +1,28 @@
+{
+  "name": "NaijaVote — Know Your Candidate",
+  "short_name": "NaijaVote",
+  "description": "Research Nigerian election candidates, compare manifestos, check track records and make an informed vote.",
+  "start_url": "/en",
+  "display": "standalone",
+  "background_color": "#006400",
+  "theme_color": "#006400",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["education", "politics", "news"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "label": "NaijaVote home screen"
+    }
+  ]
+}
