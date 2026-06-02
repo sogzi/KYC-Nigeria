@@ -1,10 +1,12 @@
-name = "naijvote-nigeria"
+name = "kyc-nigeria"
+main = ".open-next/worker.js"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Pages: static assets output directory
-pages_build_output_dir = ".open-next/assets"
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
 
 [vars]
 # Non-secret vars can go here.
-# Secrets (SUPABASE keys, etc.) must be set in the Cloudflare dashboard.
+# Secrets (SUPABASE keys, API keys, etc.) must be set in the Cloudflare dashboard.
