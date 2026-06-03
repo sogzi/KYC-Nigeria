@@ -2,7 +2,8 @@
  * POST /api/pipeline
  * GET  /api/pipeline  (health / status check)
  *
- * Triggers the automated Wikipedia → Claude → Supabase candidate pipeline.
+ * Triggers the Claude-first candidate data pipeline.
+ * Claude generates profiles directly from its training knowledge.
  *
  * Authentication:
  *   Set PIPELINE_SECRET in Cloudflare env vars.
@@ -15,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { SEED_CANDIDATES } from '@/lib/candidates/seed-list';
 import { runBulkCandidatePipeline } from '@/lib/candidates/pipeline';
 
@@ -91,6 +93,26 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[pipeline/route] Starting pipeline for ${seeds.length} candidate(s)`);
+
+  // When running the full pipeline (no slug filter), wipe unverified placeholder
+  // candidates first so fake demo data doesn't linger alongside real profiles.
+  if (!slugFilter) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const supabase = createAdminClient() as any;
+      const { error: delErr } = await supabase
+        .from('candidates')
+        .delete()
+        .eq('is_verified', false);
+      if (delErr) {
+        console.warn('[pipeline/route] Could not purge unverified candidates:', delErr.message);
+      } else {
+        console.log('[pipeline/route] Purged unverified placeholder candidates');
+      }
+    } catch (e) {
+      console.warn('[pipeline/route] Purge step failed (non-fatal):', e);
+    }
+  }
 
   try {
     const result = await runBulkCandidatePipeline(seeds, (r, i, total) => {

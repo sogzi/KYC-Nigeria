@@ -1,21 +1,22 @@
 /**
- * Automated candidate data pipeline:
- *   Wikipedia (free, no-auth) → Claude Haiku (structure + enrich) → Supabase
+ * Automated candidate data pipeline — Claude-first approach.
  *
- * Flow for each candidate:
- *  1. Fetch full Wikipedia extract (10 kB of plain text)
- *  2. Send to Claude Haiku with a strict JSON schema prompt
- *  3. Parse the JSON response into DB row shapes
- *  4. Upsert candidate + manifesto points + track records into Supabase
+ * Claude Sonnet already has deep, accurate knowledge of major Nigerian
+ * politicians. We ask it directly — no Wikipedia round-trip required.
  *
- * The pipeline is idempotent: running it again only updates changed fields.
- * All AI-generated records are flagged is_verified = false until a human
- * reviews them in the admin UI.
+ * Flow:
+ *  1. Ask Claude Sonnet to generate a structured JSON profile from its
+ *     training knowledge of the candidate.
+ *  2. Optionally enrich with a Wikipedia photo URL (zero text fetched).
+ *  3. Upsert candidate + manifesto points + track records into Supabase.
+ *
+ * The pipeline is idempotent — running it again only updates changed fields.
+ * All AI-generated records are flagged is_verified = false.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createAdminClient } from '@/lib/supabase/server';
-import { fetchWikiExtract, fetchWikiSummary, searchWikiTitle } from './wikipedia';
+import { fetchWikiSummary } from './wikipedia';
 import type { SeedCandidate } from './seed-list';
 import type {
   EducationEntry,
@@ -58,32 +59,39 @@ export interface PipelineResult {
   message?: string;
 }
 
-// ── Claude prompt ─────────────────────────────────────────────────────────────
+// ── System prompt ─────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are a Nigerian political researcher. Given a Wikipedia article about a Nigerian politician, extract structured data and return ONLY valid JSON — no markdown fences, no prose, just the JSON object.
+const SYSTEM_PROMPT = `You are a Nigerian political researcher with comprehensive knowledge of Nigerian politicians, their careers, policies, and public records.
+
+Generate a factual structured profile for the given Nigerian politician using your knowledge. Return ONLY valid JSON — no markdown fences, no prose, just the JSON object.
 
 Your JSON must match this exact schema:
 {
-  "full_name": "string",
+  "full_name": "string — official full name",
   "date_of_birth": "YYYY-MM-DD or null",
   "state_of_origin": "Nigerian state name or null",
   "local_government": "LGA name or null",
-  "biography": "3–5 sentence factual biography",
+  "biography": "4–6 sentence factual biography in third person covering background, career highlights, and current role",
   "education": [
-    { "institution": "string", "degree": "string", "field": "string or null", "year_end": number or null }
+    {
+      "institution": "string",
+      "degree": "string",
+      "field": "string or null",
+      "year_end": number or null
+    }
   ],
   "manifesto_points": [
     {
       "category": one of ["economy","security","education","healthcare","infrastructure","corruption"],
-      "section_title": "short title e.g. 'Economic Policy'",
-      "content": "2–4 sentence summary of their stated policy position or track record in this area"
+      "section_title": "short title e.g. 'Economic Vision'",
+      "content": "3–5 sentence summary of their documented policy positions, proposals, or track record in this area"
     }
   ],
   "track_records": [
     {
       "year": number,
       "title": "short event title",
-      "description": "1–3 sentences",
+      "description": "2–4 sentences of factual detail",
       "record_type": one of ["achievement","controversy","conviction","policy","appointment"],
       "source_url": null
     }
@@ -91,39 +99,39 @@ Your JSON must match this exact schema:
 }
 
 Rules:
-- Include 2–5 manifesto_points covering different policy categories
-- Include 3–8 track_records of notable events in their career
-- If data is unavailable for a field, use null (not empty string)
-- Do NOT invent facts. Only use what is in the provided Wikipedia text
-- Biography must be in the third person
-- Keep all content factual and neutral`;
+- Include at least 3 education entries if known, or fewer if genuinely not documented
+- Include 3–5 manifesto_points covering different policy categories
+- Include 5–10 track_records of notable career events (achievements AND controversies)
+- Controversies and challenges are important — include them factually and neutrally
+- If a specific field is genuinely unknown (e.g. exact date of birth), use null — do NOT guess
+- Do NOT invent facts. Use only what you know with high confidence
+- Keep all content factual, neutral, and appropriate for a voter education platform`;
 
-function buildUserPrompt(seed: SeedCandidate, wikiText: string): string {
-  return `Wikipedia article about ${seed.full_name} (${seed.party_affiliation}, ${seed.election_type}):
+// ── Claude generation ─────────────────────────────────────────────────────────
 
----
-${wikiText}
----
-
-Extract the structured profile JSON per the schema above.`;
-}
-
-// ── Claude extraction ─────────────────────────────────────────────────────────
-
-async function extractProfileWithClaude(
+async function generateProfileWithClaude(
   seed: SeedCandidate,
-  wikiText: string,
 ): Promise<PipelineProfile | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
 
   const anthropic = new Anthropic({ apiKey });
 
+  const userMessage = `Generate a comprehensive factual profile for:
+
+Name: ${seed.full_name}
+Party: ${seed.party_affiliation}
+Election type: ${seed.election_type}
+Current position: ${seed.current_position}
+${seed.state ? `State: ${seed.state}` : ''}
+
+Use your knowledge of this Nigerian political figure. Be thorough, factual, and include both achievements and controversies where documented.`;
+
   const message = await anthropic.messages.create({
-    model:      'claude-haiku-4-5',
-    max_tokens: 2048,
+    model:      'claude-sonnet-4-5',   // Sonnet for superior political knowledge
+    max_tokens: 3000,
     system:     SYSTEM_PROMPT,
-    messages:   [{ role: 'user', content: buildUserPrompt(seed, wikiText) }],
+    messages:   [{ role: 'user', content: userMessage }],
   });
 
   const block = message.content[0];
@@ -134,11 +142,22 @@ async function extractProfileWithClaude(
 
   try {
     // Strip any accidental markdown fences
-    const raw  = block.text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/, '');
+    const raw    = block.text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/, '');
     const parsed = JSON.parse(raw) as PipelineProfile;
     return parsed;
   } catch (err) {
-    console.error(`[pipeline] JSON parse error for ${seed.slug}:`, err, '\nRaw:', block.text.slice(0, 300));
+    console.error(`[pipeline] JSON parse error for ${seed.slug}:`, err, '\nRaw:', block.text.slice(0, 400));
+    return null;
+  }
+}
+
+// ── Photo enrichment (Wikipedia only for the thumbnail) ───────────────────────
+
+async function fetchPhotoUrl(seed: SeedCandidate): Promise<string | null> {
+  try {
+    const summary = await fetchWikiSummary(seed.wikipedia_title);
+    return summary?.thumbnail?.source ?? null;
+  } catch {
     return null;
   }
 }
@@ -148,7 +167,6 @@ async function extractProfileWithClaude(
 async function upsertToSupabase(
   seed: SeedCandidate,
   profile: PipelineProfile,
-  wikiPageUrl: string | null,
 ): Promise<string | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
@@ -180,8 +198,35 @@ async function upsertToSupabase(
     .limit(1);
 
   if (candidateErr) {
-    console.error(`[pipeline] candidate upsert error (${seed.slug}):`, candidateErr.message);
-    return null;
+    // Fallback: try insert-or-update without unique constraint
+    console.warn(`[pipeline] upsert conflict (${seed.slug}), trying name-match:`, candidateErr.message);
+
+    const { data: existing } = await supabase
+      .from('candidates')
+      .select('id')
+      .eq('full_name', profile.full_name || seed.full_name)
+      .limit(1);
+
+    const existingId = (existing as Array<{ id: string }>)?.[0]?.id;
+
+    if (existingId) {
+      // Update existing
+      await supabase.from('candidates').update(candidateRow).eq('id', existingId);
+      return existingId;
+    } else {
+      // Insert new
+      const { data: inserted, error: insertErr } = await supabase
+        .from('candidates')
+        .insert(candidateRow)
+        .select('id')
+        .limit(1);
+
+      if (insertErr) {
+        console.error(`[pipeline] insert error (${seed.slug}):`, insertErr.message);
+        return null;
+      }
+      return (inserted as Array<{ id: string }>)?.[0]?.id ?? null;
+    }
   }
 
   const candidateId = (upserted as Array<{ id: string }>)?.[0]?.id;
@@ -190,12 +235,9 @@ async function upsertToSupabase(
     return null;
   }
 
-  // 2. Delete + re-insert manifesto points (simpler than diffing)
+  // 2. Delete + re-insert manifesto points
   if (profile.manifesto_points?.length) {
-    await supabase
-      .from('manifestos')
-      .delete()
-      .eq('candidate_id', candidateId);
+    await supabase.from('manifestos').delete().eq('candidate_id', candidateId);
 
     const manifestoRows = profile.manifesto_points.map((mp) => ({
       candidate_id:       candidateId,
@@ -213,10 +255,7 @@ async function upsertToSupabase(
 
   // 3. Delete + re-insert track records
   if (profile.track_records?.length) {
-    await supabase
-      .from('track_records')
-      .delete()
-      .eq('candidate_id', candidateId);
+    await supabase.from('track_records').delete().eq('candidate_id', candidateId);
 
     const trackRows = profile.track_records.map((tr) => ({
       candidate_id:       candidateId,
@@ -224,7 +263,7 @@ async function upsertToSupabase(
       title:              tr.title,
       description:        tr.description,
       record_type:        tr.record_type,
-      source_url:         wikiPageUrl ?? tr.source_url ?? null,
+      source_url:         tr.source_url ?? null,
       source_credibility: 'news_outlet' as const,
     }));
 
@@ -239,75 +278,42 @@ async function upsertToSupabase(
 
 // ── Single-candidate pipeline ─────────────────────────────────────────────────
 
-/**
- * Run the full pipeline for one candidate seed.
- * Returns a result object indicating success, skip, or error.
- */
 export async function runCandidatePipeline(
   seed: SeedCandidate,
 ): Promise<PipelineResult> {
   console.log(`[pipeline] Processing: ${seed.full_name} (${seed.slug})`);
 
-  // 1. Fetch Wikipedia content
-  let extract = await fetchWikiExtract(seed.wikipedia_title);
-  let pageUrl: string | null = null;
-
-  if (!extract) {
-    // Fallback: try searching for the right page title
-    console.log(`[pipeline] Exact title not found, searching Wikipedia for: ${seed.full_name}`);
-    const foundTitle = await searchWikiTitle(seed.full_name);
-    if (foundTitle) {
-      extract = await fetchWikiExtract(foundTitle);
-    }
-  }
-
-  if (!extract || !extract.fullText) {
-    // Last resort: use the short summary
-    const summary = await fetchWikiSummary(seed.wikipedia_title);
-    if (!summary?.extract) {
-      return { slug: seed.slug, candidateId: null, status: 'skipped', message: 'No Wikipedia content found' };
-    }
-    extract = {
-      title:    summary.title,
-      fullText: summary.extract,
-      pageUrl:  summary.content_urls?.desktop.page ?? null,
-    };
-  }
-
-  // extract is guaranteed non-null after the guard above
-  pageUrl = extract!.pageUrl;
-
-  // 2. Extract structured profile via Claude
+  // 1. Generate profile from Claude's knowledge
   let profile: PipelineProfile | null = null;
   try {
-    profile = await extractProfileWithClaude(seed, extract!.fullText);
+    profile = await generateProfileWithClaude(seed);
   } catch (err) {
     return {
       slug:        seed.slug,
       candidateId: null,
       status:      'error',
-      message:     err instanceof Error ? err.message : 'Claude extraction failed',
+      message:     err instanceof Error ? err.message : 'Claude generation failed',
     };
   }
 
   if (!profile) {
-    return { slug: seed.slug, candidateId: null, status: 'error', message: 'Claude returned null profile' };
+    return {
+      slug:        seed.slug,
+      candidateId: null,
+      status:      'error',
+      message:     'Claude returned null or unparseable profile',
+    };
   }
 
-  // Also try to pull a photo URL from Wikipedia summary
-  try {
-    const summary = await fetchWikiSummary(seed.wikipedia_title);
-    if (summary?.thumbnail?.source) {
-      profile.photo_url = summary.thumbnail.source;
-    }
-  } catch {
-    // non-fatal
+  // 2. Enrich with a photo from Wikipedia (lightweight — just the thumbnail URL)
+  if (!profile.photo_url) {
+    profile.photo_url = await fetchPhotoUrl(seed);
   }
 
   // 3. Persist to Supabase
   let candidateId: string | null = null;
   try {
-    candidateId = await upsertToSupabase(seed, profile, pageUrl);
+    candidateId = await upsertToSupabase(seed, profile);
   } catch (err) {
     return {
       slug:        seed.slug,
@@ -318,28 +324,33 @@ export async function runCandidatePipeline(
   }
 
   if (!candidateId) {
-    return { slug: seed.slug, candidateId: null, status: 'error', message: 'No candidate ID returned from upsert' };
+    return {
+      slug:        seed.slug,
+      candidateId: null,
+      status:      'error',
+      message:     'No candidate ID returned after upsert',
+    };
   }
 
-  console.log(`[pipeline] ✅ ${seed.full_name} → candidateId: ${candidateId}`);
+  console.log(`[pipeline] ✅ ${seed.full_name} → id: ${candidateId}`);
   return { slug: seed.slug, candidateId, status: 'ok' };
 }
 
 // ── Bulk pipeline ─────────────────────────────────────────────────────────────
 
 export interface BulkPipelineResult {
-  ok:      number;
-  skipped: number;
-  errors:  number;
-  details: PipelineResult[];
+  ok:         number;
+  skipped:    number;
+  errors:     number;
+  details:    PipelineResult[];
   durationMs: number;
 }
 
 /**
  * Run the pipeline for all (or a subset of) seed candidates.
  *
- * Runs sequentially to avoid rate-limiting Wikipedia and Claude.
- * Adds a 500ms pause between each candidate.
+ * Sequential with a 300ms pause between candidates to be kind to the
+ * Anthropic API rate limits.
  */
 export async function runBulkCandidatePipeline(
   seeds: SeedCandidate[],
@@ -353,9 +364,9 @@ export async function runBulkCandidatePipeline(
     details.push(result);
     onProgress?.(result, i, seeds.length);
 
-    // Rate-limit pause between candidates (except last)
+    // Polite pause between API calls (except last)
     if (i < seeds.length - 1) {
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 300));
     }
   }
 
