@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import createIntlMiddleware from 'next-intl/middleware';
 import { createServerClient }  from '@supabase/ssr';
-import { locales, defaultLocale } from './i18n/config';
+import { locales, defaultLocale, type Locale } from './i18n/config';
 
 // ── i18n middleware (handles all non-admin public routes) ─────────────────────
 
@@ -66,7 +66,15 @@ export async function middleware(request: NextRequest) {
     return adminMiddleware(request);
   }
 
-  // All public routes → i18n middleware
+  // Safety guard: if the path already starts with a valid locale segment,
+  // pass straight through — prevents next-intl from double-redirecting in
+  // edge runtimes (e.g. Cloudflare Workers).
+  const firstSegment = pathname.split('/')[1];
+  if (locales.includes(firstSegment as Locale)) {
+    return NextResponse.next();
+  }
+
+  // Root / and all other paths → i18n middleware (redirects to /{locale}/...)
   return intlMiddleware(request);
 }
 

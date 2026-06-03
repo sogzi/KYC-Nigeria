@@ -20,8 +20,6 @@ import { runBulkCandidatePipeline } from '@/lib/candidates/pipeline';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// Allow up to 5 minutes — the pipeline can be slow for many candidates
-export const maxDuration = 300;
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
 
