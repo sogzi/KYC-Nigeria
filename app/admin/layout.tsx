@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import Link from 'next/link';
-import { requireAdminUser } from '@/lib/admin-auth';
+import { getAdminUser } from '@/lib/admin-auth';
 import { adminLogout } from '@/app/actions/admin-auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,7 +46,25 @@ function NavLink({ href, label, Icon }: { href: string; label: string; Icon: Rea
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const admin = await requireAdminUser();
+  // Read the pathname header set by middleware so we can detect the login page
+  // without triggering a redirect loop (layout wraps ALL /admin/* routes).
+  const headersList = await headers();
+  const pathname    = headersList.get('x-pathname') ?? '';
+
+  // Login page: render bare — no sidebar, no auth check.
+  // The middleware already allows /admin/login through unauthenticated.
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  // All other admin pages: verify admin session.
+  // getAdminUser() returns null instead of redirecting; we redirect here.
+  const admin = await getAdminUser();
+  if (!admin) {
+    // Middleware should have caught this, but guard defensively.
+    const { redirect } = await import('next/navigation');
+    redirect('/admin/login');
+  }
 
   return (
     <div className="flex min-h-screen bg-muted/20">
@@ -67,8 +85,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         {/* User + logout */}
         <div className="border-t px-4 py-4 space-y-1">
-          <p className="text-xs font-medium truncate">{admin.profile.username}</p>
-          <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
+          <p className="text-xs font-medium truncate">{admin!.profile.username}</p>
+          <p className="text-xs text-muted-foreground truncate">{admin!.email}</p>
           <form action={adminLogout} className="pt-1">
             <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground px-0">
               <LogOut className="h-3.5 w-3.5" />

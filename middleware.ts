@@ -14,15 +14,20 @@ const intlMiddleware = createIntlMiddleware({
 // ── Admin auth guard ──────────────────────────────────────────────────────────
 
 async function adminMiddleware(request: NextRequest): Promise<NextResponse> {
-  // Login page is always accessible
-  if (request.nextUrl.pathname === '/admin/login') {
-    return NextResponse.next();
+  const { pathname } = request.nextUrl;
+
+  // Always inject the current pathname as a header so the admin layout can
+  // read it via headers() and skip auth rendering for the login page.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  // Login page is always accessible — no auth check, just pass through.
+  if (pathname === '/admin/login') {
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  // Create a mutable response so we can forward refreshed cookies
-  const response = NextResponse.next({
-    request: { headers: request.headers },
-  });
+  // For all other /admin/* routes — verify Supabase session.
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,19 +42,21 @@ async function adminMiddleware(request: NextRequest): Promise<NextResponse> {
             request.cookies.set(name, value),
           );
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2]),
+            response.cookies.set(
+              name, value,
+              options as Parameters<typeof response.cookies.set>[2],
+            ),
           );
         },
       },
     },
   );
 
-  // getUser() verifies the JWT against Supabase — more secure than getSession()
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     const loginUrl = new URL('/admin/login', request.url);
-    loginUrl.searchParams.set('next', request.nextUrl.pathname);
+    loginUrl.searchParams.set('next', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -66,19 +73,17 @@ export async function middleware(request: NextRequest) {
     return adminMiddleware(request);
   }
 
-  // Safety guard: if the path already starts with a valid locale segment,
-  // pass straight through — prevents next-intl from double-redirecting in
-  // edge runtimes (e.g. Cloudflare Workers).
+  // Safety guard: already-localized paths pass straight through.
+  // Prevents next-intl from double-redirecting in Cloudflare Workers edge runtime.
   const firstSegment = pathname.split('/')[1];
   if (locales.includes(firstSegment as Locale)) {
     return NextResponse.next();
   }
 
-  // Root / and all other paths → i18n middleware (redirects to /{locale}/...)
+  // Root and all other public paths → i18n middleware (redirects to /{locale}/…)
   return intlMiddleware(request);
 }
 
 export const config = {
-  // Match all routes except Next.js internals, static files, and API routes
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };
